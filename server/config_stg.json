@@ -1,0 +1,18 @@
+{
+    "serverPort": 4600,
+    "serverReadTimeout": 60,
+    "serverWriteTimeout": 60,
+    "MySqlDSN": "root:root@tcp(localhost:3306)/demo?parseTime=true",
+    "MongoDSN": "mongodb://localhost:27017/",
+    "MongoDBName": "demo",
+    "MongoDBCollectionName": "test",
+    "RefreshKey": "KEY-REFRESH-1234567890",
+    "PrivateKey": "KEY-1234567890",
+    "HandlerTimeOutDurationInSeconds": 5,
+    "TokenExpireDuration": 3600,
+    "RefreshTokenExpireDuration": 86400,
+    "maxBackupCount": 20,
+    "maxAgeForBackupFiles": 20,
+    "maxBackupFileSize": 10,
+    "writeLogs": false
+}

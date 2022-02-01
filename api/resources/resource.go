@@ -12,9 +12,12 @@ func (fn Handler) Error(c *fiber.Ctx) error {
 	if err := fn(c); err != nil {
 		eResp := &ErrorResponse{
 			StatusCode: http.StatusInternalServerError,
-			Message:    err.Error(),
-			Error:      err,
+			Status:     http.StatusText(http.StatusInternalServerError),
 		}
+
+		// TODO: need to set the trace tree
+		eResp.Error.Message = err.Error()
+
 		c.Status(http.StatusInternalServerError).JSON(eResp)
 	}
 	return nil

@@ -1,7 +1,6 @@
 package health
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -31,6 +30,5 @@ func (h *HealthHandler) Health(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return errors.New("testing error")
-	// return nil
+	return nil
 }

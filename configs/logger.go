@@ -1,6 +1,6 @@
 package configs
 
-import "freecharge/rsrc-bp/api/helpers/logger"
+import "github.com/rohanraj7316/logger"
 
 func NewLogConfig(o *logger.Options) (*logger.Options, error) {
 	o.JSONEncoding = true

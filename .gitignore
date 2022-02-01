@@ -18,3 +18,5 @@
 go.work
 
 *.sh
+
+.DS_Store

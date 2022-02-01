@@ -8,7 +8,7 @@ import (
 
 type Handler func(c *fiber.Ctx) error
 
-func (fn Handler) Error(c *fiber.Ctx) {
+func (fn Handler) Error(c *fiber.Ctx) error {
 	if err := fn(c); err != nil {
 		eResp := &ErrorResponse{
 			StatusCode: http.StatusInternalServerError,
@@ -17,4 +17,9 @@ func (fn Handler) Error(c *fiber.Ctx) {
 		}
 		c.Status(http.StatusInternalServerError).JSON(eResp)
 	}
+	return nil
+}
+
+func ErrorWrapper(fn Handler) fiber.Handler {
+	return Handler(fn).Error
 }

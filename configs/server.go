@@ -55,6 +55,7 @@ func NewServerConfig(cancel context.CancelFunc) *ServerConfigStruct {
 		ServerConfig: fiber.Config{
 			BodyLimit:   bLimit,
 			ReadTimeout: rTimeout,
+			// ErrorHandler: "",
 		},
 		WaitTimeBeforeKill: kWaitTime,
 		Version:            GetValue("VERSION", ""),

@@ -1,5 +1,5 @@
-# LIGHT
+# RSRC-BP
 
 ## Run
 
-`go run main.go`
+`sh start.sh`

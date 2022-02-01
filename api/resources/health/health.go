@@ -1,19 +1,34 @@
 package health
 
 import (
+	"fmt"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
-// GetHealth - generic health check
-func GetHealth(c *gin.Context) error {
+type HealthHandler struct {
+	projectName string
+	modelName   string
+}
+
+func NewHealthHandler(pName, mName string) *HealthHandler {
+	return &HealthHandler{
+		projectName: pName,
+		modelName:   mName,
+	}
+}
+
+// Health - generic health check
+func (h *HealthHandler) Health(c *fiber.Ctx) error {
 	response := HealthResponse{
 		StatusCode: 200,
 		Status:     "OK",
-		Message:    "Health Check Successful",
+		Message:    fmt.Sprintf("health check is successful for: %s", h.projectName),
 	}
-
-	c.JSON(http.StatusOK, response)
+	err := c.Status(http.StatusOK).JSON(response)
+	if err != nil {
+		return err
+	}
 	return nil
 }

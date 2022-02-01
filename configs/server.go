@@ -4,38 +4,21 @@ import (
 	"context"
 	"strconv"
 	"time"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
-
-type CorsConfigstruct struct {
-	// AllowOrigin defines a list of origins that may access the resource.
-	//
-	// Optional. Default value "*"
-	AllowOrigins string
-
-	// AllowMethods defines a list methods allowed when accessing the resource.
-	// This is used in response to a preflight request.
-	//
-	// Optional. Default value "GET,POST,HEAD,PUT,DELETE,PATCH"
-	AllowMethods string
-
-	// MaxAge indicates how long (in seconds) the results of a preflight request
-	// can be cached.
-	//
-	// Optional. Default value 0.
-	MaxAge int
-}
 
 // ServerConfig config.
 type ServerConfigStruct struct {
 	Port               string
-	GrpcPort           string
-	ReadTimeout        time.Duration
-	ReadHeaderTimeout  time.Duration
+	CorsConfig         cors.Config
 	DisableMaintenance string
 	ProductName        string
 	ModuleName         string
+	ServerConfig       fiber.Config
 	WaitTimeBeforeKill time.Duration
-	CorsConfig         CorsConfigstruct
+	Version            string
 }
 
 // return server config.
@@ -51,22 +34,29 @@ func NewServerConfig(cancel context.CancelFunc) *ServerConfigStruct {
 		// TODO: log the server
 	}
 
-	mTime, err := strconv.Atoi(GetValue("REQUEST_MAX_AGE", "10"))
+	// mTime, err := strconv.Atoi(GetValue("REQUEST_MAX_AGE", "10"))
+	// if err != nil {
+	// 	cancel()
+	// }
+
+	bLimit, err := strconv.Atoi(GetValue("BODY_LIMIT", ""))
 	if err != nil {
 		cancel()
 	}
 
 	return &ServerConfigStruct{
-		Port:               GetValue("PORT", "8081"),
-		GrpcPort:           GetValue("GRPC_PORT", "8080"),
-		ReadTimeout:        rTimeout,
-		ModuleName:         GetValue("MODULE_NAME", ""),
-		ProductName:        GetValue("PRODUCT_NAME", ""),
-		WaitTimeBeforeKill: kWaitTime,
-		CorsConfig: CorsConfigstruct{
+		CorsConfig: cors.Config{
 			AllowOrigins: GetValue("ALLOW_CORS_ORIGIN", ""),
-			AllowMethods: GetGetValue("ALLOW_CORS_METHODS", "POST")
-			MaxAge: mTime,
+			AllowMethods: GetValue("ALLOW_CORS_METHODS", "POST"),
 		},
+		ModuleName:  GetValue("MODULE_NAME", ""),
+		Port:        GetValue("PORT", "8081"),
+		ProductName: GetValue("PRODUCT_NAME", ""),
+		ServerConfig: fiber.Config{
+			BodyLimit:   bLimit,
+			ReadTimeout: rTimeout,
+		},
+		WaitTimeBeforeKill: kWaitTime,
+		Version:            GetValue("VERSION", ""),
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"freecharge/rsrc-bp/api/helpers/logger"
+	"freecharge/rsrc-bp/api/routes"
 	"freecharge/rsrc-bp/configs"
 	"math/rand"
 	"os"
@@ -11,8 +12,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/helmet/v2"
 )
 
 func init() {
@@ -27,25 +29,27 @@ func main() {
 	defer cancel()
 
 	config := configs.NewServerConfig(cancel)
-	sConfig := fiber.Settings{}
 
-	cConfig :=  cors.Config{
-		AllowOrigins: sConfig.CorsConfig.AllowOrigins
-		AllowMethods: sConfig.CorsConfig.AllowMethods
-		MaxAge: sConfig.CorsConfig.MaxAge
-	}
-
-	app := fiber.New(sConfig)
+	app := fiber.New(config.ServerConfig)
 
 	// adding middleware
-	app.Use(cors.New(cConfig))
+	app.Use(cors.New(config.CorsConfig))
 	app.Use(helmet.New())
 
-	// TODO: add request timeout and other configs to the server
-	err := app.Listen(fmt.Sprintf(":%s", config.Port))
+	// initialize router
+	r, err := routes.NewRouteHandler(app, config)
 	if err != nil {
-
+		cancel()
 	}
+
+	r.NewRouter(app)
+
+	// TODO: add request timeout and other configs to the server
+	err = app.Listen(fmt.Sprintf(":%s", config.Port))
+	if err != nil {
+		cancel()
+	}
+	fmt.Println("successfully starting server")
 
 	cChannel := make(chan os.Signal, 2)
 	signal.Notify(cChannel, os.Interrupt, syscall.SIGTERM)

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rohanraj7316/middleware/libs/response"
 )
 
 type HealthHandler struct {
@@ -21,14 +22,5 @@ func NewHealthHandler(pName, mName string) *HealthHandler {
 
 // Health - generic health check
 func (h *HealthHandler) Health(c *fiber.Ctx) error {
-	response := HealthResponse{
-		StatusCode: 200,
-		Status:     "OK",
-		Message:    fmt.Sprintf("health check is successful for: %s", h.projectName),
-	}
-	err := c.Status(http.StatusOK).JSON(response)
-	if err != nil {
-		return err
-	}
-	return nil
+	return response.NewBody(c, http.StatusOK, fmt.Sprintf("health check is successful for: %s", h.projectName), nil, nil)
 }

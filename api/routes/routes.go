@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"freecharge/rsrc-bp/configs"
+	"github.com/rohanraj7316/rsrc-bp-testing/configs"
 
 	"github.com/gofiber/fiber/v2"
 )

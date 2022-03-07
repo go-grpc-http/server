@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"freecharge/rsrc-bp/api/routes"
-	"freecharge/rsrc-bp/configs"
 	"log"
 	"math/rand"
 	"os"
@@ -12,10 +10,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/rohanraj7316/rsrc-bp-testing/api/routes"
+	"github.com/rohanraj7316/rsrc-bp-testing/configs"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/helmet/v2"
 	"github.com/rohanraj7316/logger"
+	"github.com/rohanraj7316/middleware"
 )
 
 func init() {
@@ -44,6 +46,15 @@ func main() {
 	app.Use(cors.New(config.CorsConfig))
 	app.Use(helmet.New())
 
+	// initializing middleware
+	/*
+		used to turn off the request logging
+		middleware.ConfigDefault.SetReqResLog(false)
+		used to turn off request & response body logging
+		middleware.ConfigDefault.SetReqResBodyLog(false)
+	*/
+	app.Use(middleware.New(app))
+
 	// initialize router
 	r, err := routes.NewRouteHandler(app, config)
 	if err != nil {
@@ -71,7 +82,7 @@ bLoop:
 
 		case <-cChannel:
 			logger.Warn("catch interrupted signal")
-			// time.Sleep(sConfig.WaitTimeBeforeKill)
+			time.Sleep(config.WaitTimeBeforeKill)
 			break bLoop
 		}
 	}
@@ -79,7 +90,7 @@ bLoop:
 	// TODO: add grpc shutting down handling
 	err = app.Shutdown()
 	if err != nil {
-		// logging in server terminaltion
+		logger.Error(err.Error())
 	}
 
 	logger.Warn("shutting down the server :(")

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rohanraj7316/middleware/libs/response"
 )
 
 type VersionHandler struct {
@@ -22,19 +23,11 @@ func NewVersionHandler(pName, mName, version string) *VersionHandler {
 
 // generic version check
 func (h *VersionHandler) Version(c *fiber.Ctx) error {
-	response := VersionResponse{
-		StatusCode: 200,
-		Status:     "OK",
-		Message:    "version check successful",
-		Data: Data{
-			Version:     h.version,
-			ModelName:   h.modelName,
-			ProjectName: h.projectName,
-		},
+	rData := VersionResponseData{
+		Version:     h.version,
+		ModelName:   h.modelName,
+		ProjectName: h.projectName,
 	}
-	err := c.Status(http.StatusOK).JSON(response)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return response.NewBody(c, http.StatusOK, "version check successful", rData, nil)
 }

@@ -13,14 +13,14 @@ type HealthHandler struct {
 	modelName   string
 }
 
-func NewHealthHandler(pName, mName string) *HealthHandler {
+func New(pName, mName string) *HealthHandler {
 	return &HealthHandler{
 		projectName: pName,
 		modelName:   mName,
 	}
 }
 
-// Health - generic health check
+// Health just a health check
 func (h *HealthHandler) Health(c *fiber.Ctx) error {
 	return response.NewBody(c, http.StatusOK, fmt.Sprintf("health check is successful for: %s", h.projectName), nil, nil)
 }

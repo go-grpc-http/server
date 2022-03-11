@@ -1,7 +1,6 @@
 package configs
 
 import (
-	"context"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -22,10 +21,10 @@ type ServerConfigStruct struct {
 }
 
 // return server config.
-func NewServerConfig(cancel context.CancelFunc) *ServerConfigStruct {
+func NewServerConfig() (*ServerConfigStruct, error) {
 	kWaitTime, err := time.ParseDuration(GetValue("WAIT_TIME_BEFORE_KILL", "10s"))
 	if err != nil {
-		cancel()
+		return nil, err
 	}
 
 	sConfig := configs.ServerDefault
@@ -42,5 +41,5 @@ func NewServerConfig(cancel context.CancelFunc) *ServerConfigStruct {
 		ServerConfig:       sConfig,
 		WaitTimeBeforeKill: kWaitTime,
 		Version:            GetValue("VERSION", ""),
-	}
+	}, nil
 }

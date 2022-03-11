@@ -5,18 +5,11 @@
 #### Top-level Direction
 
 * [configs/](config/) - contains all the configs. you should use ** singleton pattern ** while loading it inside the env.
-
-* [api/helpers](api/helpers) -
+preferred way to load it inside the router.
 
 * [api/resources](api/resources) - 
 
 * [api/routes](api/routes) - 
-
-## Pre Requisite
-
-* Git - we use git extensively
-    * Forks - 
-    * Commits -
 
 ## Run
 

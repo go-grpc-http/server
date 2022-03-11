@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/rohanraj7316/middleware/libs/response"
+	"github.com/rohanraj7316/rsrc-bp-testing/api/resources/health"
+	"github.com/rohanraj7316/rsrc-bp-testing/api/resources/version"
 	"github.com/rohanraj7316/rsrc-bp-testing/configs"
 
 	"github.com/gofiber/fiber/v2"
@@ -34,11 +36,11 @@ func (r *RouteHandler) NewRouter(app *fiber.App) {
 	routes := []Route{
 		{
 			path:   "/health",
-			router: r.Health,
+			router: health.Router,
 		},
 		{
 			path:   "/version",
-			router: r.Version,
+			router: version.Router,
 		},
 	}
 

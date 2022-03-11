@@ -25,20 +25,22 @@ func init() {
 }
 
 func main() {
-	// TODO: need to check for the cancelation of contexts
 	// can be used to terminate the server using done
 	pCtx := context.Background()
 	ctx, cancel := context.WithCancel(pCtx)
 	defer cancel()
 
 	// initialize logger
-	lOptions, _ := configs.NewLogConfig(logger.NewOptions())
-	err := logger.Configure(lOptions)
+	err := logger.Configure()
 	if err != nil {
 		log.Panic(err)
 	}
 
-	config := configs.NewServerConfig(cancel)
+	config, err := configs.NewServerConfig()
+	if err != nil {
+		logger.Error(err.Error())
+		cancel()
+	}
 
 	app := fiber.New(config.ServerConfig)
 
@@ -58,15 +60,17 @@ func main() {
 	// initialize router
 	r, err := routes.NewRouteHandler(app, config)
 	if err != nil {
+		logger.Error(err.Error())
 		cancel()
 	}
 
 	r.NewRouter(app)
 
 	logger.Info("successful starting server :)")
-	// TODO: add request timeout and other configs to the server
+
 	err = app.Listen(fmt.Sprintf(":%s", config.Port))
 	if err != nil {
+		logger.Error(err.Error())
 		cancel()
 	}
 
@@ -77,8 +81,7 @@ bLoop:
 	for {
 		select {
 		case <-ctx.Done():
-			// TODO: need to understand this more deaply.
-			// list down the operations after Done is triggered
+			break bLoop
 
 		case <-cChannel:
 			logger.Warn("catch interrupted signal")
@@ -87,7 +90,7 @@ bLoop:
 		}
 	}
 
-	// TODO: add grpc shutting down handling
+	// TODO: add logics for service shutdown.
 	err = app.Shutdown()
 	if err != nil {
 		logger.Error(err.Error())

@@ -45,9 +45,7 @@ func (r *RouteHandler) NewRouter(app *fiber.App) {
 	}
 
 	for i := 0; i < len(routes); i++ {
-		route := routes[i]
-		aGroup := app.Group(route.path)
-		route.router(aGroup)
+		routes[i].router(app.Group(routes[i].path))
 	}
 
 	app.Use("*", func(c *fiber.Ctx) error {

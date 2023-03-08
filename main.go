@@ -2,99 +2,69 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"math/rand"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
+	"net"
+	"net/http"
 
-	"github.com/rohanraj7316/rsrc-bp-testing/api/routes"
-	"github.com/rohanraj7316/rsrc-bp-testing/configs"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/helmet/v2"
-	"github.com/rohanraj7316/logger"
-	"github.com/rohanraj7316/middleware"
+	"github.com/rohanraj7316/rsrc-bp-grpc/trade"
+	"google.golang.org/grpc"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
+type server struct {
+	trade.UnimplementedTradingMSServer
 }
 
+func NewServer() *server {
+	return &server{}
+}
+
+// @reference - https://github.com/grpc-ecosystem/grpc-gateway/issues/2039#issuecomment-799560929
 func main() {
-	// can be used to terminate the server using done
-	pCtx := context.Background()
-	ctx, cancel := context.WithCancel(pCtx)
-	defer cancel()
-
-	// initialize logger
-	err := logger.Configure()
+	// Create a listener on TCP port
+	lis, err := net.Listen("tcp", ":8080")
 	if err != nil {
-		log.Panic(err)
+		log.Fatalln("Failed to listen:", err)
 	}
 
-	config, err := configs.NewServerConfig()
+	// Create a gRPC server object
+	s := grpc.NewServer()
+
+	// Attach the Greeter service to the server
+	trade.RegisterTradingMSServer(s, &server{})
+
+	// Serve gRPC Server
+	log.Println("serving gRPC on 0.0.0.0:8080")
+	go func() {
+		log.Fatalln(s.Serve(lis))
+	}()
+
+	conn, err := grpc.DialContext(
+		context.Background(),
+		"0.0.0.0:8080",
+		grpc.WithBlock(),
+		grpc.WithTransportCredentials(
+			insecure.NewCredentials(),
+		),
+	)
 	if err != nil {
-		logger.Error(err.Error())
-		cancel()
+		log.Fatalln("failed to dial server: ", err)
 	}
 
-	app := fiber.New(config.ServerConfig)
+	gmux := runtime.NewServeMux()
 
-	// adding middleware
-	app.Use(cors.New(config.CorsConfig))
-	app.Use(helmet.New())
-
-	// initializing middleware
-	/*
-		used to turn off the request logging
-		middleware.ConfigDefault.SetReqResLog(false)
-		used to turn off request & response body logging
-		middleware.ConfigDefault.SetReqResBodyLog(false)
-	*/
-	app.Use(middleware.New(app))
-
-	// initialize router
-	r, err := routes.NewRouteHandler(app, config)
+	err = trade.RegisterTradingMSHandler(context.Background(), gmux, conn)
 	if err != nil {
-		logger.Error(err.Error())
-		cancel()
+		log.Fatalln("failed to register gateway: ", err)
 	}
 
-	r.NewRouter(app)
-
-	logger.Info("successful starting server :)")
-
-	err = app.Listen(fmt.Sprintf(":%s", config.Port))
-	if err != nil {
-		logger.Error(err.Error())
-		cancel()
+	gwServer := &http.Server{
+		Addr:    ":8090",
+		Handler: gmux,
 	}
 
-	cChannel := make(chan os.Signal, 2)
-	signal.Notify(cChannel, os.Interrupt, syscall.SIGTERM)
-
-bLoop:
-	for {
-		select {
-		case <-ctx.Done():
-			break bLoop
-
-		case <-cChannel:
-			logger.Warn("catch interrupted signal")
-			time.Sleep(config.WaitTimeBeforeKill)
-			break bLoop
-		}
-	}
-
-	// TODO: add logics for service shutdown.
-	err = app.Shutdown()
-	if err != nil {
-		logger.Error(err.Error())
-	}
-
-	logger.Warn("shutting down the server :(")
+	log.Println("serving grpc-gateway on http://0.0.0.0:8090")
+	log.Fatalln(gwServer.ListenAndServe())
 }

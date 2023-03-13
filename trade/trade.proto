@@ -1,4 +1,3 @@
-// // +build tools
 syntax = "proto3";
 
 option go_package="/trade";

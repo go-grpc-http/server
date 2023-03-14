@@ -1,24 +1,24 @@
 syntax = "proto3";
 
-option go_package="/trade";
+option go_package="/protos";
 
 import "google/api/annotations.proto";
 
 // define empty message
-message HealthRequest {
+message VersionRequest {
     string projectName = 1;
 }
 
-message HealthResponse {
+message VersionResponse {
     int32 statusCode = 1;
     string message = 2;
 }
 
-service TradingMS {
-    rpc Health(HealthRequest) returns(HealthResponse) {
+service Version {
+    rpc Version(VersionRequest) returns(VersionResponse) {
         option (google.api.http) = {
-            post: "/health"
+            post: "/version"
             body: "*"
-          };
+        };
     }
 }

@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option go_package="/protos";
+
+import "google/api/annotations.proto";
+
+// define empty message
+message VersionRequest {
+    string projectName = 1;
+}
+
+message VersionResponse {
+    int32 statusCode = 1;
+    string message = 2;
+}
+
+service Version {
+    rpc Version(VersionRequest) returns(VersionResponse) {
+        option (google.api.http) = {
+            post: "/version"
+            body: "*"
+        };
+    }
+}

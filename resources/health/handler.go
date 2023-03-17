@@ -28,5 +28,5 @@ func (s *Handler) RegisterHttp(ctx context.Context, mux *runtime.ServeMux, clien
 }
 
 func (s *Handler) Health(ctx context.Context, _ *protos.HealthRequest) (*protos.HealthResponse, error) {
-	return nil, status.Error(codes.Unimplemented, codes.Unimplemented.String())
+	return nil, status.Error(codes.DeadlineExceeded, codes.DeadlineExceeded.String())
 }

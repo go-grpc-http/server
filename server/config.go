@@ -4,9 +4,16 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"os"
 	"time"
 
 	"google.golang.org/grpc"
+)
+
+const (
+	ENV_HTTP_PORT       = "HTTP_PORT"
+	ENV_GRPC_PORT       = "GRPC_PORT"
+	ENV_REQUEST_TIMEOUT = "REQUEST_TIMEOUT"
 )
 
 type Config struct {
@@ -14,25 +21,12 @@ type Config struct {
 	grpcPort string
 
 	timeout time.Duration
-	flags   []string
-
-	reflection             bool
-	registeredGrpcHandlers []GrpcRegisterer
-	registeredHttpHandlers []HttpRegisterer
-
-	options struct {
-		grpc []*grpc.ServerOption
-	}
 }
 
-var ConfigDefault = &Config{
-	grpcPort:   ":8080",
-	httpPort:   ":8090",
-	reflection: true,
-}
+var ConfigDefault = &Config{}
 
 func configDefault(config ...Config) (*Config, error) {
-	return ConfigDefault, nil
+	httpPort := os.Getenv(ENV_HTTP_PORT)
 }
 
 func (cfg *Config) httpServer(handler http.Handler) *http.Server {
@@ -43,8 +37,8 @@ func (cfg *Config) httpServer(handler http.Handler) *http.Server {
 	}
 }
 
-func (cfg *Config) grpcServer() *grpc.Server {
-	return grpc.NewServer()
+func (cfg *Config) grpcServer(opt ...grpc.ServerOption) *grpc.Server {
+	return grpc.NewServer(opt...)
 }
 
 func (cfg *Config) listener(ctx context.Context) (net.Listener, error) {

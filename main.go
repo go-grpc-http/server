@@ -2,11 +2,10 @@ package main
 
 import (
 	"context"
+	"go-grpc-http/resources/health"
+	"go-grpc-http/resources/version"
+	"go-grpc-http/server"
 	"log"
-
-	"github.com/rohanraj7316/rsrc-bp-grpc/resources/health"
-	"github.com/rohanraj7316/rsrc-bp-grpc/resources/version"
-	"github.com/rohanraj7316/rsrc-bp-grpc/server"
 )
 
 // @reference - https://github.com/grpc-ecosystem/grpc-gateway/issues/2039#issuecomment-799560929

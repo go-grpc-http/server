@@ -12,7 +12,10 @@ import (
 )
 
 type server struct {
-	cfg *Config
+	cfg                    *Config
+	reflection             bool
+	registeredGrpcHandlers []GrpcRegisterer
+	registeredHttpHandlers []HttpRegisterer
 
 	grpcServer *grpc.Server
 }
@@ -20,7 +23,7 @@ type server struct {
 func New(config ...Config) (*server, error) {
 	cfg, err := configDefault(config...)
 	if err != nil {
-
+		return nil, err
 	}
 
 	// Create a gRPC server object
@@ -29,29 +32,27 @@ func New(config ...Config) (*server, error) {
 	}, nil
 }
 
-func (s *server) WithDualRegisterer(regs ...Registry) {
-	for index := range regs {
-		s.cfg.registeredGrpcHandlers = append(s.cfg.registeredGrpcHandlers, regs[index])
-		s.cfg.registeredHttpHandlers = append(s.cfg.registeredHttpHandlers, regs[index])
-	}
-}
-
 func (s *server) Run(ctx context.Context) {
 	lis, err := s.cfg.listener(ctx)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
+	/*
+		list of unary interceptor that are been added
+		* recovery
+	*/
+
 	s.grpcServer = s.cfg.grpcServer()
 
-	for _, handler := range s.cfg.registeredGrpcHandlers {
+	for _, handler := range s.registeredGrpcHandlers {
 		err = handler.RegisterGrpc(s.grpcServer)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
-	if s.cfg.reflection {
+	if s.reflection {
 		reflection.Register(s.grpcServer)
 	}
 
@@ -74,7 +75,7 @@ func (s *server) Run(ctx context.Context) {
 
 	gwMux := runtime.NewServeMux()
 
-	for _, handler := range s.cfg.registeredHttpHandlers {
+	for _, handler := range s.registeredHttpHandlers {
 		err = handler.RegisterHttp(ctx, gwMux, conn)
 		if err != nil {
 			log.Fatal(err)

@@ -1,8 +1,0 @@
-export PORT=9091
-
-export MODULE_NAME=bp
-export PRODUCT_NAME=rsrc-bp
-export WAIT_TIME_BEFORE_KILL=60s
-export VERSION=0.1
-
-go run main.go

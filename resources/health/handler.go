@@ -3,8 +3,9 @@ package health
 import (
 	"context"
 
+	"github.com/go-grpc-http/server/protos"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/rohanraj7316/rsrc-bp-grpc/protos"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

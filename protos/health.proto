@@ -5,19 +5,18 @@ option go_package="/protos";
 import "google/api/annotations.proto";
 
 // define empty message
-message HealthRequest {
-    string projectName = 1;
-}
+message HealthRequest {}
 
 message HealthResponse {
     int32 statusCode = 1;
-    string message = 2;
+    string status = 2;
+    string message = 3;
 }
 
 service Health {
     rpc Health(HealthRequest) returns(HealthResponse) {
         option (google.api.http) = {
-            post: "/health"
+            get: "/health"
             body: "*"
         };
     }

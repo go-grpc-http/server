@@ -20,3 +20,9 @@ go.work
 *.sh
 
 .DS_Store
+
+*.proto
+
+*.yaml
+
+*.lock

@@ -27,6 +27,7 @@ type ServerConfig struct {
 	ReflectionFlag bool
 }
 
+// ServerConfigDefault is set of default sever configs
 var ServerConfigDefault = ServerConfig{
 	RequestTimeout: 1 * time.Second,
 	ReflectionFlag: true,

@@ -24,6 +24,7 @@ func (s *server) listener(ctx context.Context, grpcAddr string) (net.Listener, e
 	return net.Listen("tcp", grpcAddr)
 }
 
+// WithDualRegisterer used for registering http and gRPC handlers
 func (s *server) WithDualRegisterer(regs ...Registry) {
 	// TODO: add flagging checks
 	for index := range regs {
@@ -32,16 +33,19 @@ func (s *server) WithDualRegisterer(regs ...Registry) {
 	}
 }
 
+// WithGrpcRegisterer used for registering only gRPC handlers
 func (s *server) WithGrpcRegisterer(regs ...GrpcRegisterer) {
 	// TODO: add flagging checks
 	s.registeredGrpcHandlers = append(s.registeredGrpcHandlers, regs...)
 }
 
+// WithHttpRegisterer used for registering only http handlers
 func (s *server) WithHttpRegisterer(regs ...HttpRegisterer) {
 	// TODO: add flagging checks
 	s.registeredHttpHandlers = append(s.registeredHttpHandlers, regs...)
 }
 
+// WithUnaryServerInterceptor used for registering only [UnaryServerInterceptor](https://grpc.io/blog/grpc-web-interceptor/)
 func (s *server) WithUnaryServerInterceptor(regs ...HttpRegisterer) {
 	// TODO: add flagging checks
 	s.registeredHttpHandlers = append(s.registeredHttpHandlers, regs...)

@@ -34,7 +34,7 @@ type config struct {
 
 func configDefault() (*config, error) {
 	cfg := &config{}
-	cfg.ReflectionFlag = true
+	cfg.ReflectionFlag = false
 	cfg.ErrorHandler = func(ctx context.Context, err error) error { return nil }
 
 	return cfg, nil

@@ -17,44 +17,45 @@ const (
 	GrpcPort = 8090
 )
 
-type Server struct {
+type Handler struct {
 	protos.UnimplementedNameServer
 }
 
-func NewServer() *Server {
-	return &Server{}
+func NewHandler() *Handler {
+	return &Handler{}
 }
 
-func (s *Server) RegisterGrpc(srv *grpc.Server) error {
+func (s *Handler) RegisterGrpc(srv *grpc.Server) error {
 	protos.RegisterNameServer(srv, s)
 	return nil
 }
 
-func (s *Server) RegisterHttp(ctx context.Context, mux *runtime.ServeMux,
+func (s *Handler) RegisterHttp(ctx context.Context, mux *runtime.ServeMux,
 	client *grpc.ClientConn) error {
 	return protos.RegisterNameHandler(ctx, mux, client)
 }
 
-func (s *Server) GetName(ctx context.Context, in *protos.NameGetRequest) (*protos.NameGetResponse, error) {
+func (s *Handler) GetName(ctx context.Context, in *protos.NameGetRequest) (*protos.NameGetResponse, error) {
 	return nil, status.Error(codes.Unimplemented, codes.Unimplemented.String())
 }
 
-func (s *Server) SetName(ctx context.Context, in *protos.NameSetRequest) (*protos.NameSetResponse, error) {
+func (s *Handler) SetName(ctx context.Context, in *protos.NameSetRequest) (*protos.NameSetResponse, error) {
 	return nil, status.Error(codes.Unimplemented, codes.Unimplemented.String())
 }
 
 func main() {
-	srv, err := server.New()
+	nh := NewHandler()
+
+	srv, err := server.New(
+		server.WithHttpPort(HttpPort),
+		server.WithGrpcPort(GrpcPort),
+		server.WithDualRegisterer(nh),
+	)
 	if err != nil {
 		log.Fatalf("failed to initialize server: %s", err)
 	}
 
-	nh := NewServer()
-
-	// register dual handlers
-	srv.WithDualRegisterer(nh)
-
-	err = srv.Run(context.Background(), HttpPort, GrpcPort)
+	err = srv.Run(context.Background())
 	if err != nil {
 		log.Fatalf("failed to start server: %s", err)
 	}

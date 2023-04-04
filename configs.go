@@ -32,7 +32,8 @@ type config struct {
 	serverOpts             []grpc.ServerOption
 }
 
-func configDefault(config ...Option) (cfg *config, err error) {
+func configDefault() (*config, error) {
+	cfg := &config{}
 	cfg.ReflectionFlag = true
 	cfg.ErrorHandler = func(ctx context.Context, err error) error { return nil }
 

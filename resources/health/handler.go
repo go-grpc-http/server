@@ -2,13 +2,12 @@ package health
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/go-grpc-http/server/protos"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type Handler struct {
@@ -29,5 +28,8 @@ func (s *Handler) RegisterHttp(ctx context.Context, mux *runtime.ServeMux, clien
 }
 
 func (s *Handler) Health(ctx context.Context, _ *protos.HealthRequest) (*protos.HealthResponse, error) {
-	return nil, status.Error(codes.DeadlineExceeded, codes.DeadlineExceeded.String())
+	return &protos.HealthResponse{
+		StatusCode: http.StatusOK,
+		Message:    "Health Successful",
+	}, nil
 }

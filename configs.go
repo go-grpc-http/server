@@ -116,3 +116,12 @@ func WithRequestTimeout(t time.Duration) Option {
 		return nil
 	}
 }
+
+// WithReflection used to set ReflectionFlag
+func WithReflection(flag bool) Option {
+	return func(c *config) error {
+		c.ReflectionFlag = flag
+
+		return nil
+	}
+}

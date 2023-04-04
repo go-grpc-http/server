@@ -24,32 +24,29 @@ func (s *server) start(ctx context.Context, httpAddr, grpcAddr string) error {
 		return err
 	}
 
-	/*
-		TODO: define way to add unary interceptor
-	*/
-
-	s.gServer = s.grpcServer(ctx)
+	s.gRpcServer = s.initGrpcServer(ctx, s.cfg.serverOpts...)
 
 	// initialize health and version routes
 	hh := health.New()
 	vh := version.New()
-	s.registeredGrpcHandlers = append(s.registeredGrpcHandlers, []GrpcRegisterer{hh, vh}...)
-	s.registeredHttpHandlers = append(s.registeredHttpHandlers, []HttpRegisterer{hh, vh}...)
 
-	for _, handler := range s.registeredGrpcHandlers {
-		err = handler.RegisterGrpc(s.gServer)
+	s.cfg.registeredGrpcHandlers = append(s.cfg.registeredGrpcHandlers, []GrpcRegisterer{hh, vh}...)
+	s.cfg.registeredHttpHandlers = append(s.cfg.registeredHttpHandlers, []HttpRegisterer{hh, vh}...)
+
+	for _, handler := range s.cfg.registeredGrpcHandlers {
+		err = handler.RegisterGrpc(s.gRpcServer)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
 	if s.cfg.ReflectionFlag {
-		reflection.Register(s.gServer)
+		reflection.Register(s.gRpcServer)
 	}
 
 	log.Printf("serving gRPC on 0.0.0.0%s", grpcAddr)
 	go func() {
-		s.gServer.Serve(lis)
+		s.gRpcServer.Serve(lis)
 	}()
 
 	conn, err := grpc.DialContext(
@@ -64,19 +61,19 @@ func (s *server) start(ctx context.Context, httpAddr, grpcAddr string) error {
 		return err
 	}
 
-	gwMux := runtime.NewServeMux()
+	mux := runtime.NewServeMux()
 
-	for _, handler := range s.registeredHttpHandlers {
-		err = handler.RegisterHttp(ctx, gwMux, conn)
+	for _, handler := range s.cfg.registeredHttpHandlers {
+		err = handler.RegisterHttp(ctx, mux, conn)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
 	log.Printf("serving grpc-gateway on http://0.0.0.0%s", httpAddr)
-	s.hServer = s.httpServer(ctx, httpAddr, gwMux)
+	s.httpServer = s.initHttpServer(ctx, httpAddr, mux)
 
-	return s.hServer.ListenAndServe()
+	return s.httpServer.ListenAndServe()
 }
 
 // TODO: need to implement
@@ -90,23 +87,20 @@ func (s *server) cleanup(ctx context.Context) error {
 }
 
 // Run use to start running your server
-func (s *server) Run(ctx context.Context, httpPort, grpcPort int) error {
-	httpAddr := fmt.Sprintf(":%d", httpPort)
-	grpcAddr := fmt.Sprintf(":%d", grpcPort)
-
+func (s *server) Run(ctx context.Context) error {
 	// TODO: add listener handling
-	return s.start(ctx, httpAddr, grpcAddr)
+	return s.start(ctx, s.cfg.httpPort, s.cfg.gRpcPort)
 }
 
 // TODO: need to improve the implementation
 // Stop use to stop your server gracefully
 func (s *server) Stop(ctx context.Context) error {
-	err := s.hServer.Shutdown(ctx)
+	err := s.httpServer.Shutdown(ctx)
 	if err != nil {
 		return err
 	}
 
-	s.gServer.GracefulStop()
+	s.gRpcServer.GracefulStop()
 
 	return nil
 }

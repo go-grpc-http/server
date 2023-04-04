@@ -7,23 +7,25 @@ import (
 )
 
 type server struct {
-	cfg ServerConfig
-
-	hServer *http.Server
-	gServer *grpc.Server
-
-	registeredGrpcHandlers []GrpcRegisterer
-	registeredHttpHandlers []HttpRegisterer
+	cfg        *config
+	httpServer *http.Server
+	gRpcServer *grpc.Server
 }
 
-// New used to initialize config for server.
-func New(config ...ServerConfig) (*server, error) {
-	cfg, err := serverConfigDefault(config...)
+// New used to initialize new server.
+func New(opts ...Option) (*server, error) {
+	cfg, err := configDefault()
 	if err != nil {
 		return nil, err
 	}
 
-	// return struct that been used internally
+	for _, opt := range opts {
+		err = opt(cfg)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &server{
 		cfg: cfg,
 	}, nil

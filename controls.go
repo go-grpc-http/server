@@ -3,19 +3,17 @@ package server
 import (
 	"context"
 	"fmt"
-	"log"
 
-	"github.com/go-grpc-http/server/resources/health"
-	"github.com/go-grpc-http/server/resources/version"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+
+	"github.com/go-grpc-http/server/resources"
+
+	"github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 )
-
-func (s *server) init(ctx context.Context) error {
-	return nil
-}
 
 func (s *server) start(ctx context.Context, httpAddr, grpcAddr string) error {
 
@@ -27,16 +25,15 @@ func (s *server) start(ctx context.Context, httpAddr, grpcAddr string) error {
 	s.gRpcServer = s.initGrpcServer(ctx, s.cfg.serverOpts...)
 
 	// initialize health and version routes
-	hh := health.New()
-	vh := version.New()
+	ih := resources.New()
 
-	s.cfg.registeredGrpcHandlers = append(s.cfg.registeredGrpcHandlers, []GrpcRegisterer{hh, vh}...)
-	s.cfg.registeredHttpHandlers = append(s.cfg.registeredHttpHandlers, []HttpRegisterer{hh, vh}...)
+	s.cfg.registeredGrpcHandlers = append(s.cfg.registeredGrpcHandlers, []GrpcRegisterer{ih}...)
+	s.cfg.registeredHttpHandlers = append(s.cfg.registeredHttpHandlers, []HttpRegisterer{ih}...)
 
 	for _, handler := range s.cfg.registeredGrpcHandlers {
 		err = handler.RegisterGrpc(s.gRpcServer)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 	}
 
@@ -44,36 +41,40 @@ func (s *server) start(ctx context.Context, httpAddr, grpcAddr string) error {
 		reflection.Register(s.gRpcServer)
 	}
 
-	log.Printf("serving gRPC on 0.0.0.0%s", grpcAddr)
-	go func() {
-		s.gRpcServer.Serve(lis)
-	}()
+	if s.cfg.httpPort != "" {
+		eg := errgroup.Group{}
 
-	conn, err := grpc.DialContext(
-		ctx,
-		fmt.Sprintf("0.0.0.0%s", grpcAddr),
-		grpc.WithBlock(),
-		grpc.WithTransportCredentials(
-			insecure.NewCredentials(),
-		),
-	)
-	if err != nil {
-		return err
+		eg.Go(func() error {
+			conn, err := grpc.DialContext(
+				ctx,
+				fmt.Sprintf("0.0.0.0%s", grpcAddr),
+				grpc.WithBlock(),
+				grpc.WithTransportCredentials(
+					insecure.NewCredentials(),
+				),
+			)
+			if err != nil {
+				return err
+			}
+
+			mux := runtime.NewServeMux()
+
+			for _, handler := range s.cfg.registeredHttpHandlers {
+				err = handler.RegisterHttp(ctx, mux, conn)
+				if err != nil {
+					return err
+				}
+			}
+
+			s.httpServer = s.initHttpServer(ctx, httpAddr, mux)
+
+			log.Info().Msgf("serving grpc-gateway on http://0.0.0.0%s", httpAddr)
+			return s.httpServer.ListenAndServe()
+		})
 	}
 
-	mux := runtime.NewServeMux()
-
-	for _, handler := range s.cfg.registeredHttpHandlers {
-		err = handler.RegisterHttp(ctx, mux, conn)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	log.Printf("serving grpc-gateway on http://0.0.0.0%s", httpAddr)
-	s.httpServer = s.initHttpServer(ctx, httpAddr, mux)
-
-	return s.httpServer.ListenAndServe()
+	log.Info().Msgf("serving gRPC on 0.0.0.0%s", grpcAddr)
+	return s.gRpcServer.Serve(lis)
 }
 
 // TODO: need to implement
@@ -88,7 +89,6 @@ func (s *server) cleanup(ctx context.Context) error {
 
 // Run use to start running your server
 func (s *server) Run(ctx context.Context) error {
-	// TODO: add listener handling
 	return s.start(ctx, s.cfg.httpPort, s.cfg.gRpcPort)
 }
 

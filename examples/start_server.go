@@ -50,6 +50,7 @@ func main() {
 		server.WithHttpPort(HttpPort),
 		server.WithGrpcPort(GrpcPort),
 		server.WithDualRegisterer(nh),
+		server.WithReflection(true),
 	)
 	if err != nil {
 		log.Fatalf("failed to initialize server: %s", err)

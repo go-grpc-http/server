@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-grpc-http/server/interceptors/ctx"
 	"github.com/go-grpc-http/server/interceptors/logging"
+	"github.com/rs/cors"
 	"google.golang.org/grpc"
 )
 
@@ -25,6 +26,8 @@ type config struct {
 	//
 	// Default: DefaultErrorHandler
 	ErrorHandler ErrorHandler
+
+	CorsOption cors.Options
 
 	httpPort               string
 	gRpcPort               string

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/rs/cors"
 
 	"github.com/go-grpc-http/server/resources"
 
@@ -66,7 +67,8 @@ func (s *server) start(ctx context.Context, httpAddr, grpcAddr string) error {
 				}
 			}
 
-			s.httpServer = s.initHttpServer(ctx, httpAddr, mux)
+			s.httpServer = s.initHttpServer(ctx, httpAddr,
+				cors.New(s.cfg.CorsOption).Handler(mux))
 
 			log.Info().Msgf("serving grpc-gateway on http://0.0.0.0%s", httpAddr)
 			return s.httpServer.ListenAndServe()

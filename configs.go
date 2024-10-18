@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/go-grpc-http/server/interceptors/ctx"
-	"github.com/go-grpc-http/server/interceptors/logging"
 	"github.com/rs/cors"
 	"google.golang.org/grpc"
 )
@@ -45,7 +44,6 @@ func configDefault() (*config, error) {
 	cfg.serverOpts = append(cfg.serverOpts,
 		grpc.ChainUnaryInterceptor(
 			ctx.UnaryServerInterceptor(),
-			logging.UnaryServerInterceptor(),
 		),
 	)
 
